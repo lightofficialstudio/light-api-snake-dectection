@@ -1,18 +1,4 @@
-runs/*
-data/train/*
-data/val/*
-data/runs/*
-data/detection_snake/*
-uploads/210180586_2876015172616219_8947027940737108642_n.jpg
-uploads/*
-venv/*
-instance/*
 __pycache__/*
 app/__pycache__/*
-venv/
-venv/*
-.git copy/hooks/*
-
-# Ignore all .pyc files
-*.pyc
-.git copy/*
+models/__pycache__/*
+utils/__pycache__/*
