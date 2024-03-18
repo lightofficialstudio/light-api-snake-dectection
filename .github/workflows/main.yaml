@@ -30,10 +30,10 @@ jobs:
           
           # Heroku API key associated with provided user's email.
           # Api Key is available under your Heroku account settings.
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_api_key: 76160135-d508-4545-90d3-ddcc4655706d
           
           # Name of the heroku application to which the build is to be sent.
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          heroku_app_name: snake-detection-container
 
           # (Optional, default: "./")
           # Dockerfile directory.
