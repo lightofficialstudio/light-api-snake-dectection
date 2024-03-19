@@ -3,10 +3,10 @@ import torch
 
 def get_yolov5():
     model_binary = torch.hub.load(
-        "./yolov5", "custom", path="./model/model_binary.pt", source="local"
+        "yolo", "custom", path="./model/model_binary.pt", source="local"
     )
     model_multiclass = torch.hub.load(
-        "./yolov5", "custom", path="./model/model_multiclass.pt", source="local"
+        "yolo", "custom", path="./model/model_multiclass.pt", source="local"
     )
 
     # ตั้งค่า conf สำหรับ model_multiclass เป็น confident_value ไม่ว่าเงื่อนไขจะเป็นอย่างไร
