@@ -1,87 +1,39 @@
 from flask import Flask, request, jsonify, Blueprint
-from werkzeug.utils import secure_filename
-import os
-import io
-import json
-import tempfile
-from pathlib import Path
+from model import get_yolov5
+from PIL import Image
+from io import BytesIO
+import base64
 
-from detect_snake import detect_snake_image
+model_snake = get_yolov5()
 
-main = Blueprint("main", __name__)
-
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+app = Blueprint("main", __name__)
 
 
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+@app.route("/", methods=["GET"])
+def index():
+    print("User is on the index page")
+    return "Welcome to Snake Detection API"
 
 
-@main.route("/", methods=["GET"])
-def hello():
-    return jsonify({"message": "Hello, this is the snake detection API!"})
+@app.route("/predict", methods=["POST"])
+def detect_image():
+    print("User is on the predict page")
+    if model_snake is None:
+        return jsonify({"error": "Model not loaded properly"}), 500
 
+    image = request.files["image"]
+    img = Image.open(BytesIO(image.read()))
+    results = model_snake(img, size=244)
+    results_data = results.pandas().xyxy[0]  # เข้าถึงผลลัพธ์เต็มรูปแบบ
 
-@main.route("/predict", methods=["POST"])
-def predict():
-    if "image" not in request.files:
-        return jsonify({"error": "No image part"}), 400
-
-    image_file = request.files["image"]
-    if image_file.filename == "":
-        return jsonify({"error": "No selected file"}), 400
-
-    if not allowed_file(image_file.filename):
-        return jsonify({"error": "Unsupported file format"}), 400
-
-    try:
-        # Create a temporary file for image processing
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
-            temp_file_path = Path(
-                temp_file.name
-            )  # Using Path for cross-platform compatibility
-            image_file.save(temp_file_path)  # Direct use of Path with .save()
-
-            # Call the snake detection function
-            print(f"Temporary file path: {temp_file_path}")
-            detection_results = detect_snake_image(
-                str(temp_file_path)
-            )  # Convert Path to string when passing to the function
-
-            detection_json = json.loads(detection_results)
-
-            # Process and format snake details
-            snake_details = [
-                {
-                    "class": prediction["class"],
-                    "class_name": prediction.get("class_name", ""),
-                    "confidence": prediction["confidence"],
-                    "probability": prediction["confidence"] * 100,
-                }
-                for prediction in detection_json
-            ]
-
-            # Return successful response with snake details
-            return jsonify(snake_details)
-
-    except Exception as e:
-        return (
-            jsonify({"error": f"Failed in detect_snake_image function: {str(e)}"}),
-            500,
+    label_result = []
+    for _, row in results_data.iterrows():
+        label_result.append(
+            {
+                "class_name": row["name"],  # ตัวอย่างการเข้าถึง class_name
+                "confidence": row["confidence"],
+                # คุณสามารถเพิ่ม fields อื่นๆ ที่ต้องการได้
+            }
         )
 
-    finally:
-        # Always delete the temporary file after processing (if created)
-        if (
-            temp_file_path.exists()
-        ):  # Use .exists() from Path for checking file existence
-            temp_file_path.unlink(
-                missing_ok=True
-            )  # Use unlink for file removal, compatible with pathlib
-
-
-app = Flask(__name__)
-app.register_blueprint(main)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    return jsonify({"labels": label_result})
