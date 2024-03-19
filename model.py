@@ -1,12 +1,23 @@
 import torch
+import os
 
 
 def get_yolov5():
+    yolo_path = os.path.join("yolo")
+    model_binary_path = os.path.join("model", "model_binary.pt")
+    model_multiclass_path = os.path.join("model", "model_multiclass.pt")
+
     model_binary = torch.hub.load(
-        "yolo", "custom", path="./model/model_binary.pt", source="local"
+        yolo_path,
+        "custom",
+        path=model_binary_path,
+        source="local",
     )
     model_multiclass = torch.hub.load(
-        "yolo", "custom", path="./model/model_multiclass.pt", source="local"
+        yolo_path,
+        "custom",
+        path=model_multiclass_path,
+        source="local",
     )
 
     # ตั้งค่า conf สำหรับ model_multiclass เป็น confident_value ไม่ว่าเงื่อนไขจะเป็นอย่างไร
@@ -15,6 +26,4 @@ def get_yolov5():
     if model_binary.conf > 0.4:
         return model_multiclass
     else:
-        # ตัวอย่าง: หากคุณต้องการ return model_multiclass ไม่ว่าอย่างไร
-        # หรือคุณอาจจะต้องการ handle การไม่เข้าเงื่อนไขในวิธีอื่น
         return model_multiclass
